@@ -43,6 +43,7 @@ SDL_Window* g_window = nullptr;
 SDL_GLContext g_gl_context;
 projectm_handle g_projectm_instance = nullptr;
 projectm_playlist_handle g_projectm_playlist = nullptr;
+int winW, winH;
 
 // PipeWire Globals
 struct pw_main_loop *g_pw_loop = nullptr;
@@ -148,14 +149,18 @@ bool initSDLOpenGL() {
     std::cout << "Initializing SDL and OpenGL..." << std::endl;
     if (SDL_Init(SDL_INIT_VIDEO) < 0) { std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl; return false; }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2); SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    g_window = SDL_CreateWindow("projectM PipeWire Visualizer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    g_window = SDL_CreateWindow("projectM PipeWire Visualizer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
     if (!g_window) { std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl; return false; }
     g_gl_context = SDL_GL_CreateContext(g_window);
     if (!g_gl_context) { std::cerr << "OpenGL context could not be created! SDL_Error: " << SDL_GetError() << std::endl; return false; }
     glewExperimental = GL_TRUE; GLenum glewError = glewInit();
     if (glewError != GLEW_OK) { std::cerr << "Error initializing GLEW! " << glewGetErrorString(glewError) << std::endl; return false; }
     if (SDL_GL_SetSwapInterval(1) < 0) std::cout << "Warning: Unable to set VSync! SDL Error: " << SDL_GetError() << std::endl;
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    //glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_GetWindowSize(g_window, &winW, &winH);
+    std::cout << "Window size: " << winW << "x" << winH << std::endl;
+    glViewport(0, 0, winW, winH);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     std::cout << "SDL and OpenGL initialized." << std::endl;
     return true;
 }
@@ -171,8 +176,10 @@ bool initProjectM() {
     }
     std::cout << "projectM instance created." << std::endl;
 
-    projectm_set_window_size(g_projectm_instance, SCREEN_WIDTH, SCREEN_HEIGHT);
-    projectm_set_mesh_size(g_projectm_instance, 32, 24);
+    //projectm_set_window_size(g_projectm_instance, SCREEN_WIDTH, SCREEN_HEIGHT);
+    //projectm_set_mesh_size(g_projectm_instance, 32, 24);
+    projectm_set_window_size(g_projectm_instance, winW, winH);
+    projectm_set_mesh_size(g_projectm_instance, winW / 32, winH / 32);
 
     g_projectm_playlist = projectm_playlist_create(g_projectm_instance);
     if (!g_projectm_playlist) {
